@@ -1,19 +1,14 @@
-import shutil
-import tempfile
 from http import HTTPStatus
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from ..forms import PostForm
 from ..models import Group, Post, User
 
-TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
-
-@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -32,11 +27,6 @@ class PostFormTests(TestCase):
         )
         cls.form = PostForm()
         cls.post_qty = Post.objects.count()
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         self.authorized_client = Client()

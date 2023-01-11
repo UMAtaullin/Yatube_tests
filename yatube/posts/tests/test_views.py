@@ -1,19 +1,12 @@
-import shutil
-import tempfile
-
 from django import forms
-from django.conf import settings
 from django.core.cache import cache
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from ..forms import PostForm
 from ..models import Group, Post, User
 
-TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
-
-@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostViewsTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -39,11 +32,6 @@ class PostViewsTests(TestCase):
             ('posts:post_create', None, 'posts/create_post.html'),
             ('posts:post_edit', (cls.post.id,), 'posts/create_post.html'),
         )
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         self.authorized_client = Client()
