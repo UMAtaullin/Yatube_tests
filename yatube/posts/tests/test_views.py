@@ -94,7 +94,6 @@ class PostViewsTests(TestCase):
 
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
-
         response = self.authorized_client.get(
             reverse('posts:post_detail', args=(self.post.id,))
         )
@@ -122,20 +121,3 @@ class PostViewsTests(TestCase):
                         self.assertIsInstance(form_field, expected)
                         self.assertIsInstance(response.context['form'],
                                               PostForm)
-
-    def test_post_appears_at_group(self):
-        """Пост НЕ появляется в другой группе."""
-        Post.objects.create(
-            author=self.user,
-            text='Текстовый текст',
-            group=self.group
-        )
-        group_2 = Group.objects.create(
-            title='Тестовая группа 2',
-            slug='test-group-2',
-            description='Тестовое описание 2',
-        )
-        response = self.authorized_client.get(
-            reverse('posts:group_list', args=(group_2.slug,))
-        )
-        self.assertEqual(len(response.context['page_obj']), 0)

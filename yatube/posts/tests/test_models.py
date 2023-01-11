@@ -8,8 +8,6 @@ class PostModelTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Создаём тестовую запись в БД
-        # и сохраняем созданную запись в качестве переменной класса
         cls.user = User.objects.create_user(username='auth')
         cls.group = Group.objects.create(
             title='Заголовок тестовой задачи',
