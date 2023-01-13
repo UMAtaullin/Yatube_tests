@@ -13,7 +13,7 @@ class PostFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create(username='Author')
+        cls.user = User.objects.create_user(username='Author')
         cls.user_no_author = User.objects.create_user(username='NoAuthor')
         cls.group = Group.objects.create(
             title='Тестовая группа',
@@ -26,7 +26,7 @@ class PostFormTests(TestCase):
             group=cls.group,
         )
         cls.form = PostForm()
-        cls.post_qty = Post.objects.count()
+        cls.post_quantity = Post.objects.count()
 
     def setUp(self):
         self.authorized_client = Client()
@@ -56,7 +56,7 @@ class PostFormTests(TestCase):
                         f'{login}?{REDIRECT_FIELD_NAME}={reverse_name}',
                         HTTPStatus.FOUND
                     )
-        self.assertEqual(self.post_qty, self.post_qty)
+        self.assertEqual(self.post_quantity, self.post_quantity)
 
     def test_guest_cant_create_post(self):
         """Гость не может создавать записи."""

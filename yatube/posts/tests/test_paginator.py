@@ -17,13 +17,13 @@ class PaginatorTests(TestCase):
             slug='test-slug',
             description='Тестовое описание',
         )
-        cls.post_qty = 99
+        cls.post_quantity = settings.LIMIT_POSTS + 1
         Post.objects.bulk_create(
             [Post(
                 author=cls.user,
                 text=f'Тестовая запись{post}',
                 group=cls.group
-            )for post in range(cls.post_qty)]
+            )for post in range(cls.post_quantity)]
         )
         cls.urls = (
             ('posts:index', None),
