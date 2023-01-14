@@ -5,7 +5,7 @@ from django.urls import reverse
 from http import HTTPStatus
 
 
-class PostCreateFormTests(TestCase):
+class TaskCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -26,10 +26,10 @@ class PostCreateFormTests(TestCase):
         cls.form = PostForm()
 
     def test_create_post(self):
-        """Валидная форма создает запись"""
+        """Проверка создания поста, редирект + 1 пост."""
         posts_count = Post.objects.count()
         form_data = {
-            'text': 'Тестовый текст',
+            'text': 'Текст записанный в форму',
             'group': self.group.pk,
         }
         response = self.authorized_client.post(
@@ -38,19 +38,19 @@ class PostCreateFormTests(TestCase):
             follow=True
         )
         self.assertRedirects(response, reverse(
-            'posts:profile', kwargs={'username': PostCreateFormTests.user})
+            'posts:profile', kwargs={'username': TaskCreateFormTests.user})
         )
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertTrue(
             Post.objects.filter(
-                group=PostCreateFormTests.group,
-                author=PostCreateFormTests.user,
+                group=TaskCreateFormTests.group,
+                author=TaskCreateFormTests.user,
                 text='Тестовый текст'
             ).exists()
         )
 
     def test_guest_create_post(self):
-        """Создание записи только после авторизации"""
+        """Проверка прав редактирования"""
         form_data = {
             'text': 'Тестовый пост от неавторизованного пользователя',
             'group': self.group.pk,

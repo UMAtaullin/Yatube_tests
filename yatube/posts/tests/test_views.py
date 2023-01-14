@@ -9,7 +9,7 @@ class PostViewsTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create(username='Author')
+        cls.user = User.objects.create_user(username='Author')
         cls.user_no_author = User.objects.create_user(username='NoAuthor')
         cls.group = Group.objects.create(
             title='Тестовая группа',
@@ -21,7 +21,7 @@ class PostViewsTests(TestCase):
             text='Тестовая запись',
             group=cls.group,
         )
-        cls.post_qty = Post.objects.count()
+        cls.post_quantity = Post.objects.count()
         cls.urls = (
             ('posts:index', None, 'posts/index.html'),
             ('posts:profile', (cls.user,), 'posts/profile.html'),
