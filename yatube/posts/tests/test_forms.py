@@ -2,8 +2,9 @@ from http import HTTPStatus
 
 from django.test import Client, TestCase
 from django.urls import reverse
-from posts.forms import PostForm
-from posts.models import Group, Post, User
+
+from ..forms import PostForm
+from ..models import Group, Post, User
 
 
 class TaskCreateFormTests(TestCase):
@@ -27,10 +28,10 @@ class TaskCreateFormTests(TestCase):
         cls.form = PostForm()
 
     def test_create_post(self):
-        """Проверка создания поста, редирект + 1 пост."""
+        """Валидная форма создает запись."""
         posts_count = Post.objects.count()
         form_data = {
-            'text': 'Текст записанный в форму',
+            'text': 'Тестовый текст',
             'group': self.group.pk,
         }
         response = self.authorized_client.post(
@@ -51,7 +52,7 @@ class TaskCreateFormTests(TestCase):
         )
 
     def test_guest_create_post(self):
-        """Проверка прав редактирования"""
+        """Проверка прав редактирования."""
         form_data = {
             'text': 'Тестовый пост от неавторизованного пользователя',
             'group': self.group.pk,
@@ -68,7 +69,7 @@ class TaskCreateFormTests(TestCase):
         )
 
     def test_authorized_edit_post(self):
-        """Редактирование записи создателем поста"""
+        """Редактирование записи создателем поста."""
         form_data = {
             'text': 'Тестовый текст',
             'group': self.group.pk,
