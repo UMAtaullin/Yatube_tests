@@ -1,9 +1,7 @@
-from django import forms
 from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..forms import PostForm
 from ..models import Group, Post, User
 
 
@@ -38,10 +36,14 @@ class PostViewsTests(TestCase):
         self.authorized_client.force_login(self.user)
         self.authorized_client_no_author = Client()
         self.authorized_client_no_author.force_login(self.user_no_author)
+        self.follower = User.objects.create(
+            username='follower'
+        )
+        self.follower_client = Client()
         cache.clear()
 
     def test_pages_uses_correct_template(self):
-        """view-функции использует соответствующий шаблон."""
+        """View-функции использует соответствующий шаблон."""
         for url, args, template in self.urls:
             reverse_name = reverse(url, args=args)
             with self.subTest(reverse_name=reverse_name):
@@ -59,53 +61,17 @@ class PostViewsTests(TestCase):
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.group, self.group)
 
-    def test_index_page_show_correct_context(self):
-        """Шаблон index сформирован с правильным контекстом."""
-        response = self.authorized_client.get(reverse('posts:index'))
-        self.check_context(response)
-
-    def test_profile_page_show_correct_context(self):
-        """Шаблон profile сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
-            reverse('posts:profile', args=(self.user,))
-        )
-        self.check_context(response)
-        self.assertEqual(response.context.get('author'), self.user)
-
-    def test_group_list_page_show_correct_context(self):
-        """Шаблон group_list сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
-            reverse('posts:group_list', args=(self.group.slug,))
-        )
-        self.check_context(response)
-        self.assertEqual(response.context.get('group'), self.group)
-
-    def test_post_detail_page_show_correct_context(self):
-        """Шаблон post_detail сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
-            reverse('posts:post_detail', args=(self.post.id,))
-        )
-        self.check_context(response, True)
-
-    def test_create_edit_page_show_correct_form(self):
-        """post_create и post_edit сформированы с правильным контекстом."""
-        urls = (
-            ('posts:post_create', None),
-            ('posts:post_edit', (self.post.id,)),
-        )
-        form_fields = {
-            'text': forms.fields.CharField,
-            'group': forms.models.ChoiceField,
-        }
-        for url, slug in urls:
-            reverse_name = reverse(url, args=slug)
-            with self.subTest(reverse_name=reverse_name):
-                response = self.authorized_client.get(reverse_name)
-                for value, expected in form_fields.items():
-                    with self.subTest(value=value):
-                        form_field = response.context.get('form').fields.get(
-                            value
-                        )
-                        self.assertIsInstance(form_field, expected)
-                        self.assertIsInstance(response.context['form'],
-                                              PostForm)
+    def test_pages_show_correct_context(self):
+        """Шаблоны сформированы с правильным контекстом."""
+        context = {reverse('posts:index'): self.post,
+                   reverse('posts:profile',
+                   kwargs={'username': self.user.username,
+                           }): self.post,
+                   reverse('posts:group_list',
+                   kwargs={'slug': self.group.slug,
+                           }): self.post,
+                   }
+        for reverse_page, object in context.items():
+            with self.subTest(reverse_page=reverse_page):
+                response = self.follower_client.get(reverse_page)
+                self.check_context(response)

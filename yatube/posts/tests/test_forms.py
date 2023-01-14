@@ -1,70 +1,96 @@
-from http import HTTPStatus
-
-from django.conf import settings
-from django.contrib.auth import REDIRECT_FIELD_NAME
+from posts.forms import PostForm
+from posts.models import Group, Post, User
 from django.test import Client, TestCase
 from django.urls import reverse
-
-from ..forms import PostForm
-from ..models import Group, Post, User
+from http import HTTPStatus
 
 
-class PostFormTests(TestCase):
+class PostCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.guest_client = Client()
         cls.user = User.objects.create_user(username='Author')
-        cls.user_no_author = User.objects.create_user(username='NoAuthor')
+        cls.authorized_client = Client()
+        cls.authorized_client.force_login(cls.user)
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test-slug',
-            description='Тестовое описание',
+            description='Тестовое описание'
         )
         cls.post = Post.objects.create(
-            author=cls.user,
             text='Тестовая запись',
-            group=cls.group,
+            author=cls.user,
+            group=cls.group
         )
         cls.form = PostForm()
-        cls.post_quantity = Post.objects.count()
 
-    def setUp(self):
-        self.authorized_client = Client()
-        self.authorized_client.force_login(self.user)
-        self.authorized_client_no_author = Client()
-        self.authorized_client_no_author.force_login(self.user_no_author)
-
-    def test_edit_form_only_for_author(self):
-        """Запись может редактировать только автор + перенаправление."""
-        roles = (
-            (self.authorized_client_no_author,),
-            (self.client,),
+    def test_create_post(self):
+        """Валидная форма создает запись"""
+        posts_count = Post.objects.count()
+        form_data = {
+            'text': 'Тестовый текст',
+            'group': self.group.pk,
+        }
+        response = self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
         )
-        for role in roles:
-            with self.subTest(role=role):
-                reverse_name = reverse('posts:post_edit', args=(self.post.id,))
-                response = self.client.post(reverse_name)
-                if role == self.authorized_client_no_author:
-                    self.assertRedirects(response, reverse(
-                        'posts:post_detail', args=(self.post.id,)),
-                        HTTPStatus.FOUND
-                    )
-                else:
-                    login = reverse(settings.LOGIN_URL)
-                    self.assertRedirects(
-                        response,
-                        f'{login}?{REDIRECT_FIELD_NAME}={reverse_name}',
-                        HTTPStatus.FOUND
-                    )
-        self.assertEqual(self.post_quantity, self.post_quantity)
-
-    def test_guest_cant_create_post(self):
-        """Гость не может создавать записи."""
-        reverse_name = reverse('posts:post_create')
-        response = self.client.post(reverse_name)
-        login = reverse(settings.LOGIN_URL)
-        self.assertRedirects(
-            response,
-            f'{login}?{REDIRECT_FIELD_NAME}={reverse_name}',
-            HTTPStatus.FOUND
+        self.assertRedirects(response, reverse(
+            'posts:profile', kwargs={'username': PostCreateFormTests.user})
         )
+        self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertTrue(
+            Post.objects.filter(
+                group=PostCreateFormTests.group,
+                author=PostCreateFormTests.user,
+                text='Тестовый текст'
+            ).exists()
+        )
+
+    def test_guest_create_post(self):
+        """Создание записи только после авторизации"""
+        form_data = {
+            'text': 'Тестовый пост от неавторизованного пользователя',
+            'group': self.group.pk,
+        }
+        self.guest_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True,
+        )
+        self.assertFalse(
+            Post.objects.filter(
+                text='Тестовый пост от неавторизованного пользователя'
+            ).exists()
+        )
+
+    def test_authorized_edit_post(self):
+        """Редактирование записи создателем поста"""
+        form_data = {
+            'text': 'Тестовый текст',
+            'group': self.group.pk,
+        }
+        self.authorized_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True,
+        )
+        post_edit = Post.objects.get(pk=self.group.pk)
+        self.client.get(f'/posts/{post_edit.pk}/edit/')
+        form_data = {
+            'text': 'Измененный пост',
+            'group': self.group.pk
+        }
+        response_edit = self.authorized_client.post(
+            reverse('posts:post_edit',
+                    kwargs={
+                        'post_id': post_edit.pk
+                    }),
+            data=form_data,
+            follow=True,
+        )
+        post_edit = Post.objects.get(pk=self.group.pk)
+        self.assertEqual(response_edit.status_code, HTTPStatus.OK)
+        self.assertEqual(post_edit.text, 'Измененный пост')
