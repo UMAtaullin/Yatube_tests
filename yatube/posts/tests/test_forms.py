@@ -13,7 +13,7 @@ class PostFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create(username='Author')
+        cls.user = User.objects.create_user(username='Author')
         cls.user_no_author = User.objects.create_user(username='NoAuthor')
         cls.group = Group.objects.create(
             title='Тестовая группа',
@@ -44,7 +44,8 @@ class PostFormTests(TestCase):
         for role in roles:
             with self.subTest(role=role):
                 reverse_name = reverse('posts:post_edit', args=(self.post.id,))
-                # Kлиент отправляет запрос, далее в зависимости от роли.
+                # Kлиент отправляет запрос, a далее в зависиости
+                # от роли выполняется то или иное условие.
                 response = self.client.post(reverse_name)
                 if role == self.authorized_client_no_author:
                     self.assertRedirects(response, reverse(
@@ -55,8 +56,7 @@ class PostFormTests(TestCase):
                     login = reverse(settings.LOGIN_URL)
                     self.assertRedirects(
                         response,
-                        # Пока еще не понял что написано в замечании.
-                        # Буду благодарен, если отправите ссылку для изучени.
+                        # Не могу понять, жду ответа в пачке.
                         f'{login}?{REDIRECT_FIELD_NAME}={reverse_name}',
                         HTTPStatus.FOUND
                     )
