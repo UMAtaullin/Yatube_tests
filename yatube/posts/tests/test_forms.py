@@ -26,21 +26,25 @@ class PostFormTests(TestCase):
             group=cls.group,
         )
         cls.form = PostForm()
-        cls.post_qty = Post.objects.count()
+        cls.post_quantity = Post.objects.count()
 
     def setUp(self):
+        self.another = Client()
+        self.another.force_login(self.user)
         self.authorized_client_no_author = Client()
         self.authorized_client_no_author.force_login(self.user_no_author)
 
     def test_edit_form_only_for_author(self):
         """Запись может редактировать только автор + перенаправление."""
-        roles = [
-            [self.authorized_client_no_author],
-            [self.client],
-        ]
+        # Работает только список в списке или кортеж в кортеже.
+        roles = (
+            (self.authorized_client_no_author,),
+            (self.another,),
+        )
         for role in roles:
             with self.subTest(role=role):
                 reverse_name = reverse('posts:post_edit', args=(self.post.id,))
+                # Kлиент отправляет запрос, далее в зависимости от роли.
                 response = self.client.post(reverse_name)
                 if role == self.authorized_client_no_author:
                     self.assertRedirects(response, reverse(
@@ -51,10 +55,12 @@ class PostFormTests(TestCase):
                     login = reverse(settings.LOGIN_URL)
                     self.assertRedirects(
                         response,
+                        # Пока еще не понял что написано в замечании.
+                        # Буду благодарен, если отправите ссылку для изучени.
                         f'{login}?{REDIRECT_FIELD_NAME}={reverse_name}',
                         HTTPStatus.FOUND
                     )
-        self.assertEqual(self.post_qty, self.post_qty)
+        self.assertEqual(self.post_quantity, self.post_quantity)
 
     def test_guest_cant_create_post(self):
         """Гость не может создавать записи."""
