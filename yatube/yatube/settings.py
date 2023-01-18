@@ -146,3 +146,5 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.LimitOffsetPagination',
 }
+
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
