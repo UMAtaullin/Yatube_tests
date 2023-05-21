@@ -1,22 +1,23 @@
-# Проект Yatube
+# Спринт 3. Тестирование Yatube.
 
-[![CI](https://github.com/yandex-praktikum/hw03_forms/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw03_forms/actions/workflows/python-app.yml)
+## Описание проекта
 
-## Описание
+Тестирование проекта Yatube, социальной сети с авторизацией, персональными лентами, комментариями и подписками на авторов статей.
 
-Yatube - это социальная сеть с авторизацией, персональными лентами, комментариями и подписками на авторов статей.
+### Стек технологий
 
-### Технологии
-
-Python 3.9
-Django 2.2.19
+* Python 3.9
+* Django 2.2
+* Unittest
+* Pytest
+* SQLite3
 
 ### Установка
 
 1. Клонировать репозиторий:
 
    ```python
-   git clone https://github.com/Ural207/hw03_forms.git
+   git clone https://github.com/UMAtaullin/Yatube_tests
    ```
 
 2. Установить виртуальное окружение для проекта:
